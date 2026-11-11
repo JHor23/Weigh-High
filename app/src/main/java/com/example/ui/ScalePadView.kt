@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -34,6 +35,25 @@ import com.example.ui.theme.PrecisionGreen
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
+
+// Static precomputed tables to eliminate allocations and math overhead during draw frames
+private const val TICK_COUNT = 32
+private val COS_TABLE = FloatArray(TICK_COUNT) { i ->
+    cos((i * (360.0 / TICK_COUNT)) * (Math.PI / 180.0)).toFloat()
+}
+private val SIN_TABLE = FloatArray(TICK_COUNT) { i ->
+    sin((i * (360.0 / TICK_COUNT)) * (Math.PI / 180.0)).toFloat()
+}
+
+private val RING_FRACTIONS = floatArrayOf(0.28f, 0.52f, 0.76f)
+private val RING_DASH_EFFECT = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+private val RETICLE_DASH_EFFECT = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
+
+private val COLOR_GRID = Color(0xFF0C0C11)
+private val COLOR_BORDER_INACTIVE = Color(0xFF161620)
+private val COLOR_TICK_INACTIVE = Color(0xFF22222D)
+private val COLOR_TICK_RADIAL = Color(0xFF262635)
+private val COLOR_RING_INACTIVE = Color(0xFF1C1C26)
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -72,18 +92,16 @@ fun ScalePadView(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val width = size.width
             val height = size.height
-            // Center positioned slightly below the top HUD for optimal ergonomics
             val center = Offset(width / 2f, height * 0.58f)
             val maxRadius = min(width * 0.46f, height * 0.38f)
 
-            // 1. Subtle AMOLED Precision Grid Lines
+            // 1. AMOLED Precision Grid Lines
             val gridStep = 32.dp.toPx()
-            val gridColor = Color(0xFF0C0C11)
 
             var xPos = center.x % gridStep
             while (xPos < width) {
                 drawLine(
-                    color = gridColor,
+                    color = COLOR_GRID,
                     start = Offset(xPos, 0f),
                     end = Offset(xPos, height),
                     strokeWidth = 1f
@@ -94,7 +112,7 @@ fun ScalePadView(
             var yPos = center.y % gridStep
             while (yPos < height) {
                 drawLine(
-                    color = gridColor,
+                    color = COLOR_GRID,
                     start = Offset(0f, yPos),
                     end = Offset(width, yPos),
                     strokeWidth = 1f
@@ -102,13 +120,13 @@ fun ScalePadView(
                 yPos += gridStep
             }
 
-            // 2. Full Edge Precision Millimeter Ruler Ticks (Left & Right margins)
+            // 2. Full Edge Precision Millimeter Ruler Ticks
             val tickInterval = 16.dp.toPx()
             var tickY = 16.dp.toPx()
             while (tickY < height - 16.dp.toPx()) {
                 val isMajor = ((tickY / tickInterval).toInt()) % 5 == 0
                 val tickLen = if (isMajor) 10.dp.toPx() else 5.dp.toPx()
-                val tickColor = if (isMajor) CyanAccent.copy(alpha = 0.4f) else Color(0xFF22222D)
+                val tickColor = if (isMajor) CyanAccent.copy(alpha = 0.4f) else COLOR_TICK_INACTIVE
 
                 // Left edge tick
                 drawLine(
@@ -129,7 +147,7 @@ fun ScalePadView(
 
             // 3. Expansive Outer Platen Chamfer Border
             drawRoundRect(
-                color = if (isActive) CyanAccent.copy(alpha = 0.35f) else Color(0xFF161620),
+                color = if (isActive) CyanAccent.copy(alpha = 0.35f) else COLOR_BORDER_INACTIVE,
                 topLeft = Offset(14.dp.toPx(), 14.dp.toPx()),
                 size = Size(width - 28.dp.toPx(), height - 28.dp.toPx()),
                 cornerRadius = CornerRadius(24.dp.toPx(), 24.dp.toPx()),
@@ -137,7 +155,6 @@ fun ScalePadView(
             )
 
             // 4. Primary Circular & Elliptical Laser-Etched Weighing Rings
-            // Radial depth background in the active target zone
             drawCircle(
                 brush = Brush.radialGradient(
                     colors = listOf(
@@ -169,27 +186,24 @@ fun ScalePadView(
                 style = Stroke(width = 2.5.dp.toPx())
             )
 
-            // Concentric precision graduation rings
-            val ringFractions = listOf(0.28f, 0.52f, 0.76f)
-            ringFractions.forEachIndexed { index, fraction ->
-                val ringRadius = maxRadius * fraction
+            // Concentric precision graduation rings using preallocated array & dash effect
+            for (index in RING_FRACTIONS.indices) {
+                val ringRadius = maxRadius * RING_FRACTIONS[index]
                 drawCircle(
-                    color = if (isActive) CyanAccent.copy(alpha = 0.35f) else Color(0xFF1C1C26),
+                    color = if (isActive) CyanAccent.copy(alpha = 0.35f) else COLOR_RING_INACTIVE,
                     radius = ringRadius,
                     center = center,
                     style = Stroke(
                         width = 1.dp.toPx(),
-                        pathEffect = if (index == 1) PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f) else null
+                        pathEffect = if (index == 1) RING_DASH_EFFECT else null
                     )
                 )
             }
 
-            // 8-Axis Radial Tick Marks
-            val tickCount = 32
-            for (i in 0 until tickCount) {
-                val angleRad = (i * (360.0 / tickCount)) * (Math.PI / 180.0)
-                val cosVal = cos(angleRad).toFloat()
-                val sinVal = sin(angleRad).toFloat()
+            // 8-Axis Radial Tick Marks using precomputed trigonometric lookup table
+            for (i in 0 until TICK_COUNT) {
+                val cosVal = COS_TABLE[i]
+                val sinVal = SIN_TABLE[i]
 
                 val isMajor = i % 4 == 0
                 val tickLength = if (isMajor) 14.dp.toPx() else 7.dp.toPx()
@@ -200,7 +214,7 @@ fun ScalePadView(
                 val end = Offset(center.x + endRadius * cosVal, center.y + endRadius * sinVal)
 
                 drawLine(
-                    color = if (isMajor) CyanAccent.copy(alpha = 0.6f) else Color(0xFF262635),
+                    color = if (isMajor) CyanAccent.copy(alpha = 0.6f) else COLOR_TICK_RADIAL,
                     start = start,
                     end = end,
                     strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
@@ -234,7 +248,7 @@ fun ScalePadView(
                 center = center
             )
 
-            // Dynamic Touch Contact Glow & Ripple at the exact touch location anywhere on screen
+            // Dynamic Touch Contact Glow & Ripple at the exact touch location
             if (state.diagnostics.isTouchActive && contactPoint != null) {
                 val rippleRadius = (45.dp.toPx() + rawSize * 90.dp.toPx()).coerceAtMost(width * 0.6f)
                 val glowAlpha = (0.35f + rawPressure * 0.65f).coerceIn(0.15f, 0.95f)
@@ -262,20 +276,20 @@ fun ScalePadView(
                     style = Stroke(width = 2.dp.toPx())
                 )
 
-                // Reticle line indicators aligning contact point to full screen axes
+                // Reticle line indicators aligning contact point to full screen axes using preallocated dash effect
                 drawLine(
                     color = CyanAccent.copy(alpha = 0.35f),
                     start = Offset(contactPoint.x, 0f),
                     end = Offset(contactPoint.x, height),
                     strokeWidth = 1f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
+                    pathEffect = RETICLE_DASH_EFFECT
                 )
                 drawLine(
                     color = CyanAccent.copy(alpha = 0.35f),
                     start = Offset(0f, contactPoint.y),
                     end = Offset(width, contactPoint.y),
                     strokeWidth = 1f,
-                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
+                    pathEffect = RETICLE_DASH_EFFECT
                 )
             }
         }

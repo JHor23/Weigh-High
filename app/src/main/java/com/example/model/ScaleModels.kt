@@ -108,5 +108,7 @@ data class ScaleUiState(
     val isCalibrating: Boolean = false,
     val calibrationStep: Int = 1, // 1: tare empty, 2: place reference, 3: done
     val selectedPreset: CalibrationPreset = CalibrationPreset.PRESETS[0],
-    val customMassInput: String = "10.0"
+    val customMassInput: String = "10.0",
+    val isDndEnabled: Boolean = false,
+    val showDndPermissionDialog: Boolean = false
 )

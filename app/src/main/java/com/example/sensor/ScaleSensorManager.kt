@@ -6,7 +6,6 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Build
-import android.os.CombinedVibration
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -16,7 +15,6 @@ import com.example.model.SensorDiagnostics
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.ArrayDeque
 import kotlin.math.acos
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -41,7 +39,7 @@ class ScaleSensorManager(context: Context) : SensorEventListener {
     )
     val diagnostics: StateFlow<SensorDiagnostics> = _diagnostics.asStateFlow()
 
-    // Filtered internal values
+    // Filtered internal values (primitives to avoid heap allocations)
     private var filteredBarometerHpa: Float = 1013.25f
     private var baselineBarometerHpa: Float = 1013.25f
     private var hasBaselineBarometer: Boolean = false
@@ -49,25 +47,34 @@ class ScaleSensorManager(context: Context) : SensorEventListener {
     private var smoothedTouchPressure: Float = 0.0f
     private var smoothedTouchSize: Float = 0.0f
 
-    // Stability ring buffer
-    private val recentSamples = ArrayDeque<Float>(20)
+    // High performance fixed circular buffer for zero-allocation variance computation
+    private val sampleBuffer = FloatArray(16)
+    private var sampleCount = 0
+    private var sampleWriteIndex = 0
+    private var runningSampleSum = 0.0f
+
     private var lastStableTriggerTime = 0L
+    private var isListenersRegistered = false
 
     init {
         startSensorListeners()
     }
 
     fun startSensorListeners() {
+        if (isListenersRegistered) return
         barometerSensor?.let { sensor ->
             sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
         }
         gravitySensor?.let { sensor ->
             sensorManager?.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
         }
+        isListenersRegistered = true
     }
 
     fun stopSensorListeners() {
+        if (!isListenersRegistered) return
         sensorManager?.unregisterListener(this)
+        isListenersRegistered = false
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
@@ -120,7 +127,7 @@ class ScaleSensorManager(context: Context) : SensorEventListener {
 
     /**
      * Ingests native Android MotionEvent from the touch scale pad.
-     * Extracts normalized pressure, touch size, and contact points.
+     * Optimized to avoid allocating lists on every touch move event.
      */
     fun processTouchEvent(event: MotionEvent): Float {
         val action = event.actionMasked
@@ -145,14 +152,12 @@ class ScaleSensorManager(context: Context) : SensorEventListener {
         var maxSize = 0.0f
         var majorAxis = 0.0f
         var minorAxis = 0.0f
-        val touchPoints = mutableListOf<Offset>()
+        val firstX = event.getX(0)
+        val firstY = event.getY(0)
 
         for (i in 0 until pointerCount) {
             val p = event.getPressure(i)
             val s = event.getSize(i)
-            val x = event.getX(i)
-            val y = event.getY(i)
-            touchPoints.add(Offset(x, y))
 
             if (p > maxPressure) maxPressure = p
             if (s > maxSize) maxSize = s
@@ -164,7 +169,7 @@ class ScaleSensorManager(context: Context) : SensorEventListener {
         smoothedTouchPressure = 0.35f * maxPressure + 0.65f * smoothedTouchPressure
         smoothedTouchSize = 0.35f * maxSize + 0.65f * smoothedTouchSize
 
-        val centerPoint = touchPoints.firstOrNull()
+        val point = Offset(firstX, firstY)
 
         updateDiagnostics {
             it.copy(
@@ -174,7 +179,7 @@ class ScaleSensorManager(context: Context) : SensorEventListener {
                 touchMajor = majorAxis,
                 touchMinor = minorAxis,
                 touchCount = pointerCount,
-                currentTouchPoint = centerPoint
+                currentTouchPoint = point
             )
         }
 
@@ -188,28 +193,36 @@ class ScaleSensorManager(context: Context) : SensorEventListener {
     fun tare() {
         baselineBarometerHpa = filteredBarometerHpa
         vibrateLight()
-        recentSamples.clear()
+        sampleCount = 0
+        sampleWriteIndex = 0
+        runningSampleSum = 0.0f
     }
 
     /**
-     * Evaluates stability of recent readings.
+     * Evaluates stability of recent readings using an allocation-free circular buffer.
      * Returns true if reading variance is minimal over recent samples.
      */
     fun evaluateStability(currentRawValue: Float): Boolean {
-        if (recentSamples.size >= 15) {
-            recentSamples.removeFirst()
+        // If buffer is full, subtract outgoing value
+        if (sampleCount == 16) {
+            runningSampleSum -= sampleBuffer[sampleWriteIndex]
+        } else {
+            sampleCount++
         }
-        recentSamples.addLast(currentRawValue)
 
-        if (recentSamples.size < 8) return false
+        sampleBuffer[sampleWriteIndex] = currentRawValue
+        runningSampleSum += currentRawValue
+        sampleWriteIndex = (sampleWriteIndex + 1) and 15 // fast modulo 16
 
-        val mean = recentSamples.average().toFloat()
+        if (sampleCount < 8) return false
+
+        val mean = runningSampleSum / sampleCount
         var sumSquares = 0.0f
-        for (sample in recentSamples) {
-            val diff = sample - mean
+        for (i in 0 until sampleCount) {
+            val diff = sampleBuffer[i] - mean
             sumSquares += diff * diff
         }
-        val variance = sumSquares / recentSamples.size
+        val variance = sumSquares / sampleCount
 
         updateDiagnostics {
             it.copy(stabilityVariance = variance)

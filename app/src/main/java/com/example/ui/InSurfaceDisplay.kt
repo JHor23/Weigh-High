@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -129,13 +130,16 @@ fun InSurfaceDisplay(
                 )
             }
 
-            // Center Badges (TARED, HELD)
+            // Center Badges (TARED, HELD, DND)
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (state.tareOffsetGrams > 0.001f) {
                     HudBadge(text = "TARED", color = ElectricAmber, testTag = "badge_tared")
                 }
                 if (state.isHeld) {
                     HudBadge(text = "HOLD", color = CyanAccent, icon = Icons.Default.Lock, testTag = "badge_held")
+                }
+                if (state.isDndEnabled) {
+                    HudBadge(text = "DND", color = ElectricAmber, icon = Icons.Default.NotificationsOff, testTag = "badge_dnd")
                 }
             }
 

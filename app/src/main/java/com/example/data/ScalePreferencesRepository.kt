@@ -12,6 +12,8 @@ class ScalePreferencesRepository(context: Context) {
     private val prefs: SharedPreferences =
         context.getSharedPreferences("weigh_high_prefs", Context.MODE_PRIVATE)
 
+    private var cachedHistory: List<WeighingRecord>? = null
+
     companion object {
         private const val KEY_TOUCH_SLOPE = "touch_slope"
         private const val KEY_BAROMETER_SLOPE = "barometer_slope"
@@ -62,8 +64,10 @@ class ScalePreferencesRepository(context: Context) {
     }
 
     fun getHistory(): List<WeighingRecord> {
+        cachedHistory?.let { return it }
+
         val jsonString = prefs.getString(KEY_HISTORY, "[]") ?: "[]"
-        val list = mutableListOf<WeighingRecord>()
+        val list = ArrayList<WeighingRecord>()
         try {
             val array = JSONArray(jsonString)
             for (i in 0 until array.length()) {
@@ -93,10 +97,12 @@ class ScalePreferencesRepository(context: Context) {
         } catch (_: Exception) {
             // fallback empty
         }
+        cachedHistory = list
         return list
     }
 
     fun saveHistory(history: List<WeighingRecord>) {
+        cachedHistory = history
         val array = JSONArray()
         for (item in history.take(100)) { // limit to last 100 entries
             val obj = JSONObject()

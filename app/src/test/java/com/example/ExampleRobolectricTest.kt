@@ -3,7 +3,9 @@ package com.example
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.model.WeightUnit
+import com.example.util.DndManager
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,5 +30,11 @@ class ExampleRobolectricTest {
         assertEquals("25.00", WeightUnit.CARATS.format(massGrams))
         assertEquals("5000", WeightUnit.MILLIGRAMS.format(massGrams))
         assertTrue(WeightUnit.OUNCES.format(massGrams).startsWith("0.17"))
+    }
+
+    @Test
+    fun `test dnd manager intent`() {
+        val intent = DndManager.getDndSettingsIntent()
+        assertNotNull(intent.action)
     }
 }

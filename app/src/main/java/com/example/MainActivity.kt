@@ -30,4 +30,16 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        // Resume sensor hardware listeners when app is in foreground
+        viewModel.sensorManager.startSensorListeners()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // Pause sensor hardware listeners when backgrounded to prevent battery drain and memory pressure
+        viewModel.sensorManager.stopSensorListeners()
+    }
 }

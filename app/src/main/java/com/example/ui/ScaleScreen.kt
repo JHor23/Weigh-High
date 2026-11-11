@@ -2,6 +2,7 @@ package com.example.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Badge
@@ -32,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +46,7 @@ import com.example.ui.theme.AmoledBlack
 import com.example.ui.theme.AmoledBorder
 import com.example.ui.theme.AmoledSurfaceElevated
 import com.example.ui.theme.CyanAccent
+import com.example.ui.theme.ElectricAmber
 import com.example.ui.theme.PrecisionGreen
 import com.example.ui.theme.TextMuted
 import com.example.viewmodel.ScaleViewModel
@@ -51,6 +56,7 @@ fun ScaleScreen(
     viewModel: ScaleViewModel,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showAnalyticsMenu by remember { mutableStateOf(false) }
     var showToolsMenu by remember { mutableStateOf(false) }
@@ -80,7 +86,7 @@ fun ScaleScreen(
                 .padding(horizontal = 14.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Header: Unit Selector on Left, Two Tiered Menus on Right
+            // Top Header: Unit Selector on Left, DND Toggle + Two Tiered Menus on Right
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -94,17 +100,49 @@ fun ScaleScreen(
                     onUnitSelected = { unit -> viewModel.setUnit(unit) }
                 )
 
-                // Two Tiered Menus on Top Right
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    // Tiered Menu 1: Weight History, Unit Conversion & Visual Representation
-                    IconButton(
-                        onClick = { showAnalyticsMenu = true },
+                // Actions on Top Right: Clean non-overlapping Action Cluster
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(AmoledSurfaceElevated)
+                        .border(1.dp, AmoledBorder, RoundedCornerShape(14.dp))
+                        .padding(horizontal = 4.dp, vertical = 3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 1. Do Not Disturb Mode Toggle Button
+                    Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
-                            .background(AmoledSurfaceElevated)
+                            .background(if (state.isDndEnabled) ElectricAmber.copy(alpha = 0.22f) else AmoledBlack)
+                            .border(
+                                1.dp,
+                                if (state.isDndEnabled) ElectricAmber else AmoledBorder,
+                                CircleShape
+                            )
+                            .clickable { viewModel.toggleDnd(context) }
+                            .testTag("action_dnd_toggle"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (state.isDndEnabled) Icons.Default.NotificationsOff else Icons.Default.Notifications,
+                            contentDescription = if (state.isDndEnabled) "Do Not Disturb On" else "Enable Do Not Disturb",
+                            tint = if (state.isDndEnabled) ElectricAmber else TextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    // 2. Tiered Menu 1: Weight History, Unit Conversion & Visual Representation
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(AmoledBlack)
                             .border(1.dp, AmoledBorder, CircleShape)
-                            .testTag("action_analytics_menu")
+                            .clickable { showAnalyticsMenu = true }
+                            .testTag("action_analytics_menu"),
+                        contentAlignment = Alignment.Center
                     ) {
                         BadgedBox(
                             badge = {
@@ -122,26 +160,27 @@ fun ScaleScreen(
                                 imageVector = Icons.Default.Scale,
                                 contentDescription = "History, Conversion & Visuals",
                                 tint = PrecisionGreen,
-                                modifier = Modifier.size(19.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
 
-                    // Tiered Menu 2: Calibration & Diagnostics Tools
-                    IconButton(
-                        onClick = { showToolsMenu = true },
+                    // 3. Tiered Menu 2: Calibration & Diagnostics Tools
+                    Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
-                            .background(AmoledSurfaceElevated)
+                            .background(AmoledBlack)
                             .border(1.dp, AmoledBorder, CircleShape)
-                            .testTag("action_tools_menu")
+                            .clickable { showToolsMenu = true }
+                            .testTag("action_tools_menu"),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Tune,
                             contentDescription = "Calibration & Diagnostics",
                             tint = CyanAccent,
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }
@@ -224,6 +263,12 @@ fun ScaleScreen(
     }
 
     // Modal Sub-Screens & Dialogs
+    if (state.showDndPermissionDialog) {
+        DndPermissionDialog(
+            onDismiss = { viewModel.dismissDndPermissionDialog() }
+        )
+    }
+
     if (showConverterDialog) {
         UnitConverterDialog(
             state = state,

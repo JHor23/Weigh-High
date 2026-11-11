@@ -58,7 +58,7 @@ fun HeaderUnitSelector(
                     .clip(RoundedCornerShape(8.dp))
                     .background(chipBg)
                     .clickable { onUnitSelected(unit) }
-                    .padding(horizontal = 8.dp, vertical = 5.dp)
+                    .padding(horizontal = 7.dp, vertical = 4.dp)
                     .testTag("unit_chip_${unit.code}"),
                 contentAlignment = Alignment.Center
             ) {

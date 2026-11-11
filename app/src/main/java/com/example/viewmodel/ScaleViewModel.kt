@@ -295,4 +295,19 @@ class ScaleViewModel(application: Application) : AndroidViewModel(application) {
     fun toggleSaveDialog(show: Boolean) {
         _uiState.update { it.copy(showSaveDialog = show) }
     }
+
+    fun toggleDnd(context: android.content.Context) {
+        val willEnable = !_uiState.value.isDndEnabled
+        if (willEnable && !com.example.util.DndManager.hasDndPermission(context)) {
+            _uiState.update { it.copy(showDndPermissionDialog = true) }
+            return
+        }
+        com.example.util.DndManager.setDnd(context, willEnable)
+        sensorManager.vibrateLight()
+        _uiState.update { it.copy(isDndEnabled = willEnable) }
+    }
+
+    fun dismissDndPermissionDialog() {
+        _uiState.update { it.copy(showDndPermissionDialog = false) }
+    }
 }
