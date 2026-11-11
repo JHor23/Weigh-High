@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Weigh High</string>
+    <string name="scale_tab_title">Precision Scale</string>
+    <string name="history_tab_title">History</string>
+    <string name="diagnostics_tab_title">Sensors</string>
+    <string name="guide_tab_title">Usage Guide</string>
+    
+    <string name="btn_tare">TARE</string>
+    <string name="btn_hold">HOLD</string>
+    <string name="btn_release">RELEASE</string>
+    <string name="btn_save">SAVE</string>
+    <string name="btn_calibrate">CALIBRATE</string>
+    <string name="btn_zero">ZERO</string>
+    
+    <string name="mode_touch">Touch Digitizer</string>
+    <string name="mode_barometer">Barometer</string>
+    <string name="mode_fusion">Dual Fusion</string>
+    
+    <string name="status_stable">STABLE</string>
+    <string name="status_unstable">MEASURING</string>
+    <string name="status_tared">TARED</string>
+    <string name="status_held">HELD</string>
+    <string name="status_flat">LEVEL</string>
+    <string name="status_tilted">TILTED - PLACE FLAT</string>
+    
+    <string name="touch_pad_hint">Place item or conductive dish in center</string>
+    <string name="calibration_title">Scale Calibration</string>
+    <string name="calibration_desc">Calibrate with a known coin or standard weight for high accuracy.</string>
+</resources>

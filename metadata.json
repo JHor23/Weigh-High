@@ -1,0 +1,6 @@
+{
+  "name": "Weigh High",
+  "description": "Precision digital scale utility utilizing device screen pressure sensors, touch digitizer contact area, and barometric micro-compression with calibration and tare.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
