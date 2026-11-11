@@ -13,11 +13,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkBorder
-import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Refresh
@@ -25,7 +23,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,15 +36,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.ScaleUiState
 import com.example.model.SensorMode
-import com.example.ui.theme.CarbonBlack
+import com.example.ui.theme.AmoledBlack
+import com.example.ui.theme.AmoledBorder
+import com.example.ui.theme.AmoledSurfaceElevated
 import com.example.ui.theme.CyanAccent
-import com.example.ui.theme.DarkSurfaceBorder
-import com.example.ui.theme.DarkSurfaceElevated
 import com.example.ui.theme.ElectricAmber
 import com.example.ui.theme.PrecisionGreen
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
 
 @Composable
 fun ScaleControls(
@@ -61,16 +57,16 @@ fun ScaleControls(
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        // Sensor Mode Switcher
+        // Compact AMOLED Sensor Mode Switcher
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color(0xFF101720))
-                .border(1.dp, DarkSurfaceBorder, RoundedCornerShape(14.dp))
-                .padding(3.dp),
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color(0xFF08080B))
+                .border(1.dp, AmoledBorder, RoundedCornerShape(10.dp))
+                .padding(2.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             SensorMode.values().forEach { mode ->
@@ -78,10 +74,10 @@ fun ScaleControls(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(if (isSelected) DarkSurfaceElevated else Color.Transparent)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isSelected) AmoledSurfaceElevated else Color.Transparent)
                         .clickable { onModeChange(mode) }
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 6.dp)
                         .testTag("mode_button_${mode.name.lowercase()}"),
                     contentAlignment = Alignment.Center
                 ) {
@@ -92,7 +88,7 @@ fun ScaleControls(
                             SensorMode.FUSION -> "Fusion"
                         },
                         color = if (isSelected) CyanAccent else TextMuted,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         fontFamily = FontFamily.Monospace
                     )
@@ -103,30 +99,30 @@ fun ScaleControls(
         // Primary Action Controls (TARE, HOLD, SAVE)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // TARE / ZERO button (Primary Large)
+            // TARE / ZERO button (Primary Large Glowing Cyan)
             Button(
                 onClick = onTare,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = CyanAccent,
-                    contentColor = CarbonBlack
+                    contentColor = AmoledBlack
                 ),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .weight(1.3f)
-                    .height(54.dp)
+                    .height(48.dp)
                     .testTag("btn_tare")
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
                     contentDescription = null,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "TARE / ZERO",
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.ExtraBold,
                     fontFamily = FontFamily.Monospace,
                     letterSpacing = 0.5.sp
@@ -137,29 +133,29 @@ fun ScaleControls(
             FilledTonalButton(
                 onClick = onToggleHold,
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = if (state.isHeld) ElectricAmber.copy(alpha = 0.2f) else DarkSurfaceElevated,
+                    containerColor = if (state.isHeld) ElectricAmber.copy(alpha = 0.2f) else AmoledSurfaceElevated,
                     contentColor = if (state.isHeld) ElectricAmber else TextPrimary
                 ),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .weight(1.0f)
-                    .height(54.dp)
+                    .height(48.dp)
                     .border(
                         1.dp,
-                        if (state.isHeld) ElectricAmber else DarkSurfaceBorder,
-                        RoundedCornerShape(16.dp)
+                        if (state.isHeld) ElectricAmber else AmoledBorder,
+                        RoundedCornerShape(14.dp)
                     )
                     .testTag("btn_hold")
             ) {
                 Icon(
                     imageVector = if (state.isHeld) Icons.Default.Lock else Icons.Default.LockOpen,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = if (state.isHeld) "RELEASE" else "HOLD",
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
                 )
@@ -170,27 +166,27 @@ fun ScaleControls(
                 onClick = onSave,
                 enabled = (state.currentWeightGrams > 0.01f || state.isHeld),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = DarkSurfaceElevated,
+                    containerColor = AmoledSurfaceElevated,
                     contentColor = PrecisionGreen,
-                    disabledContainerColor = Color(0xFF121820),
+                    disabledContainerColor = Color(0xFF0A0A0E),
                     disabledContentColor = TextMuted
                 ),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .weight(0.9f)
-                    .height(54.dp)
-                    .border(1.dp, DarkSurfaceBorder, RoundedCornerShape(16.dp))
+                    .height(48.dp)
+                    .border(1.dp, AmoledBorder, RoundedCornerShape(14.dp))
                     .testTag("btn_save")
             ) {
                 Icon(
                     imageVector = Icons.Default.BookmarkBorder,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = "LOG",
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
                 )

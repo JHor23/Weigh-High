@@ -9,41 +9,28 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.model.ScaleUiState
-import com.example.model.SensorMode
-import com.example.ui.theme.CarbonBlack
+import com.example.ui.theme.AmoledBlack
 import com.example.ui.theme.CyanAccent
 import com.example.ui.theme.CyanAccentDark
-import com.example.ui.theme.DarkSurfaceBorder
-import com.example.ui.theme.ElectricAmber
 import com.example.ui.theme.PrecisionGreen
-import com.example.ui.theme.TextMuted
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
@@ -56,14 +43,14 @@ fun ScalePadView(
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "dishAnimation")
-    val sweepAngle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
+    val sweepPulse by infiniteTransition.animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.60f,
         animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
+            animation = tween(2600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
         ),
-        label = "radarSweep"
+        label = "ambientPulse"
     )
 
     val isActive = state.diagnostics.isTouchActive || state.currentWeightGrams > 0.05f
@@ -73,20 +60,8 @@ fun ScalePadView(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
-            .aspectRatio(1f)
-            .shadow(16.dp, CircleShape)
-            .clip(CircleShape)
-            .border(2.dp, DarkSurfaceBorder, CircleShape)
-            .background(
-                Brush.radialGradient(
-                    colors = listOf(
-                        Color(0xFF1B2430),
-                        Color(0xFF121822),
-                        Color(0xFF090D13)
-                    )
-                )
-            )
+            .fillMaxSize()
+            .background(AmoledBlack)
             .pointerInteropFilter { motionEvent ->
                 onTouchEvent(motionEvent)
                 true
@@ -95,91 +70,162 @@ fun ScalePadView(
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val center = Offset(size.width / 2f, size.height / 2f)
-            val maxRadius = min(size.width, size.height) / 2f - 12.dp.toPx()
+            val width = size.width
+            val height = size.height
+            // Center positioned slightly below the top HUD for optimal ergonomics
+            val center = Offset(width / 2f, height * 0.58f)
+            val maxRadius = min(width * 0.46f, height * 0.38f)
 
-            // Outer metallic rim bevel
+            // 1. Subtle AMOLED Precision Grid Lines
+            val gridStep = 32.dp.toPx()
+            val gridColor = Color(0xFF0C0C11)
+
+            var xPos = center.x % gridStep
+            while (xPos < width) {
+                drawLine(
+                    color = gridColor,
+                    start = Offset(xPos, 0f),
+                    end = Offset(xPos, height),
+                    strokeWidth = 1f
+                )
+                xPos += gridStep
+            }
+
+            var yPos = center.y % gridStep
+            while (yPos < height) {
+                drawLine(
+                    color = gridColor,
+                    start = Offset(0f, yPos),
+                    end = Offset(width, yPos),
+                    strokeWidth = 1f
+                )
+                yPos += gridStep
+            }
+
+            // 2. Full Edge Precision Millimeter Ruler Ticks (Left & Right margins)
+            val tickInterval = 16.dp.toPx()
+            var tickY = 16.dp.toPx()
+            while (tickY < height - 16.dp.toPx()) {
+                val isMajor = ((tickY / tickInterval).toInt()) % 5 == 0
+                val tickLen = if (isMajor) 10.dp.toPx() else 5.dp.toPx()
+                val tickColor = if (isMajor) CyanAccent.copy(alpha = 0.4f) else Color(0xFF22222D)
+
+                // Left edge tick
+                drawLine(
+                    color = tickColor,
+                    start = Offset(4.dp.toPx(), tickY),
+                    end = Offset(4.dp.toPx() + tickLen, tickY),
+                    strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
+                )
+                // Right edge tick
+                drawLine(
+                    color = tickColor,
+                    start = Offset(width - 4.dp.toPx() - tickLen, tickY),
+                    end = Offset(width - 4.dp.toPx(), tickY),
+                    strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
+                )
+                tickY += tickInterval
+            }
+
+            // 3. Expansive Outer Platen Chamfer Border
+            drawRoundRect(
+                color = if (isActive) CyanAccent.copy(alpha = 0.35f) else Color(0xFF161620),
+                topLeft = Offset(14.dp.toPx(), 14.dp.toPx()),
+                size = Size(width - 28.dp.toPx(), height - 28.dp.toPx()),
+                cornerRadius = CornerRadius(24.dp.toPx(), 24.dp.toPx()),
+                style = Stroke(width = 1.2.dp.toPx())
+            )
+
+            // 4. Primary Circular & Elliptical Laser-Etched Weighing Rings
+            // Radial depth background in the active target zone
+            drawCircle(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color(0xFF101018),
+                        Color(0xFF08080C),
+                        Color.Transparent
+                    ),
+                    center = center,
+                    radius = maxRadius * 1.3f
+                ),
+                radius = maxRadius * 1.3f,
+                center = center
+            )
+
+            // Outer primary circular scale ring
             drawCircle(
                 brush = Brush.sweepGradient(
                     colors = listOf(
-                        Color(0xFF2E3A4B),
-                        Color(0xFF1A222C),
-                        Color(0xFF3B4A60),
-                        Color(0xFF1A222C),
-                        Color(0xFF2E3A4B)
+                        Color(0xFF1E1E28),
+                        Color(0xFF0F0F14),
+                        CyanAccent.copy(alpha = 0.45f),
+                        Color(0xFF0F0F14),
+                        Color(0xFF1E1E28)
                     ),
                     center = center
                 ),
                 radius = maxRadius,
                 center = center,
-                style = Stroke(width = 6.dp.toPx())
+                style = Stroke(width = 2.5.dp.toPx())
             )
 
-            // Inner glowing rim
-            drawCircle(
-                color = if (isActive) CyanAccent.copy(alpha = 0.5f) else DarkSurfaceBorder,
-                radius = maxRadius - 6.dp.toPx(),
-                center = center,
-                style = Stroke(width = 1.5.dp.toPx())
-            )
-
-            // Concentric reference rings
-            val ringFractions = listOf(0.35f, 0.60f, 0.82f)
+            // Concentric precision graduation rings
+            val ringFractions = listOf(0.28f, 0.52f, 0.76f)
             ringFractions.forEachIndexed { index, fraction ->
                 val ringRadius = maxRadius * fraction
                 drawCircle(
-                    color = if (isActive) CyanAccent.copy(alpha = 0.25f) else Color(0xFF232D3B),
+                    color = if (isActive) CyanAccent.copy(alpha = 0.35f) else Color(0xFF1C1C26),
                     radius = ringRadius,
                     center = center,
                     style = Stroke(
                         width = 1.dp.toPx(),
-                        pathEffect = if (index == 1) PathEffect.dashPathEffect(floatArrayOf(12f, 12f), 0f) else null
+                        pathEffect = if (index == 1) PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f) else null
                     )
                 )
             }
 
-            // Crosshair tick marks along 8 axes
-            val tickCount = 24
+            // 8-Axis Radial Tick Marks
+            val tickCount = 32
             for (i in 0 until tickCount) {
                 val angleRad = (i * (360.0 / tickCount)) * (Math.PI / 180.0)
                 val cosVal = cos(angleRad).toFloat()
                 val sinVal = sin(angleRad).toFloat()
 
-                val isMajor = i % 6 == 0
+                val isMajor = i % 4 == 0
                 val tickLength = if (isMajor) 14.dp.toPx() else 7.dp.toPx()
-                val startRadius = maxRadius * 0.82f - tickLength
-                val endRadius = maxRadius * 0.82f
+                val startRadius = maxRadius * 0.76f - tickLength
+                val endRadius = maxRadius * 0.76f
 
                 val start = Offset(center.x + startRadius * cosVal, center.y + startRadius * sinVal)
                 val end = Offset(center.x + endRadius * cosVal, center.y + endRadius * sinVal)
 
                 drawLine(
-                    color = if (isMajor) CyanAccent.copy(alpha = 0.6f) else Color(0xFF334155),
+                    color = if (isMajor) CyanAccent.copy(alpha = 0.6f) else Color(0xFF262635),
                     start = start,
                     end = end,
                     strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
                 )
             }
 
-            // Center crosshair lines
-            val crosshairSize = 22.dp.toPx()
+            // Full crosshair axes spanning across the plate
+            val crosshairSpan = maxRadius * 0.96f
             drawLine(
-                color = if (isActive) PrecisionGreen else CyanAccent.copy(alpha = 0.4f),
-                start = Offset(center.x - crosshairSize, center.y),
-                end = Offset(center.x + crosshairSize, center.y),
-                strokeWidth = 1.5.dp.toPx()
+                color = if (isActive) PrecisionGreen.copy(alpha = 0.6f) else CyanAccent.copy(alpha = 0.3f),
+                start = Offset(center.x - crosshairSpan, center.y),
+                end = Offset(center.x + crosshairSpan, center.y),
+                strokeWidth = 1.2.dp.toPx()
             )
             drawLine(
-                color = if (isActive) PrecisionGreen else CyanAccent.copy(alpha = 0.4f),
-                start = Offset(center.x, center.y - crosshairSize),
-                end = Offset(center.x, center.y + crosshairSize),
-                strokeWidth = 1.5.dp.toPx()
+                color = if (isActive) PrecisionGreen.copy(alpha = 0.6f) else CyanAccent.copy(alpha = 0.3f),
+                start = Offset(center.x, center.y - crosshairSpan),
+                end = Offset(center.x, center.y + crosshairSpan),
+                strokeWidth = 1.2.dp.toPx()
             )
 
-            // Center target bullseye
+            // Center Target Bullseye
             drawCircle(
-                color = if (isActive) PrecisionGreen.copy(alpha = 0.25f) else Color(0xFF1E2836),
-                radius = 18.dp.toPx(),
+                color = if (isActive) PrecisionGreen.copy(alpha = 0.25f) else CyanAccent.copy(alpha = sweepPulse * 0.3f),
+                radius = 26.dp.toPx(),
                 center = center
             )
             drawCircle(
@@ -188,17 +234,17 @@ fun ScalePadView(
                 center = center
             )
 
-            // Dynamic Touch Contact Glow & Ripple
+            // Dynamic Touch Contact Glow & Ripple at the exact touch location anywhere on screen
             if (state.diagnostics.isTouchActive && contactPoint != null) {
-                val rippleRadius = (35.dp.toPx() + rawSize * 70.dp.toPx()).coerceAtMost(maxRadius)
-                val glowAlpha = (0.3f + rawPressure * 0.6f).coerceIn(0.1f, 0.9f)
+                val rippleRadius = (45.dp.toPx() + rawSize * 90.dp.toPx()).coerceAtMost(width * 0.6f)
+                val glowAlpha = (0.35f + rawPressure * 0.65f).coerceIn(0.15f, 0.95f)
 
                 // Halo glow at contact position
                 drawCircle(
                     brush = Brush.radialGradient(
                         colors = listOf(
                             CyanAccent.copy(alpha = glowAlpha),
-                            CyanAccentDark.copy(alpha = glowAlpha * 0.4f),
+                            CyanAccentDark.copy(alpha = glowAlpha * 0.35f),
                             Color.Transparent
                         ),
                         center = contactPoint,
@@ -208,36 +254,28 @@ fun ScalePadView(
                     center = contactPoint
                 )
 
-                // High precision contact point ring
+                // Precision contact point ring
                 drawCircle(
                     color = CyanAccent,
-                    radius = (14.dp.toPx() + rawSize * 25.dp.toPx()),
+                    radius = (16.dp.toPx() + rawSize * 30.dp.toPx()),
                     center = contactPoint,
                     style = Stroke(width = 2.dp.toPx())
                 )
-            }
-        }
 
-        // Overlay Center Hints / Sensor Mode Badge
-        if (!isActive) {
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .background(CarbonBlack.copy(alpha = 0.65f))
-                    .border(1.dp, Color(0xFF263242), CircleShape)
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = when (state.sensorMode) {
-                        SensorMode.TOUCH_PRESSURE -> "PLACE ITEM ON TARGET"
-                        SensorMode.BAROMETER -> "CHASSIS SENSOR ACTIVE"
-                        SensorMode.FUSION -> "DUAL SENSOR READY"
-                    },
-                    color = TextMuted,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = FontFamily.Monospace,
-                    letterSpacing = 1.sp
+                // Reticle line indicators aligning contact point to full screen axes
+                drawLine(
+                    color = CyanAccent.copy(alpha = 0.35f),
+                    start = Offset(contactPoint.x, 0f),
+                    end = Offset(contactPoint.x, height),
+                    strokeWidth = 1f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
+                )
+                drawLine(
+                    color = CyanAccent.copy(alpha = 0.35f),
+                    start = Offset(0f, contactPoint.y),
+                    end = Offset(width, contactPoint.y),
+                    strokeWidth = 1f,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 8f), 0f)
                 )
             }
         }

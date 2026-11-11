@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,8 +33,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -46,10 +43,11 @@ import androidx.compose.ui.unit.sp
 import com.example.model.ScaleUiState
 import com.example.model.WeightUnit
 import com.example.ui.theme.AlertRed
-import com.example.ui.theme.CarbonBlack
+import com.example.ui.theme.AmoledBlack
+import com.example.ui.theme.AmoledBorder
+import com.example.ui.theme.AmoledSurface
+import com.example.ui.theme.AmoledSurfaceElevated
 import com.example.ui.theme.CyanAccent
-import com.example.ui.theme.DarkSurfaceBorder
-import com.example.ui.theme.DarkSurfaceElevated
 import com.example.ui.theme.ElectricAmber
 import com.example.ui.theme.PrecisionGreen
 import com.example.ui.theme.TextMuted
@@ -67,10 +65,10 @@ fun DigitalDisplay(
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val measuringPulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
+        initialValue = 0.35f,
         targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(600),
+            animation = tween(500),
             repeatMode = RepeatMode.Reverse
         ),
         label = "measuringPulse"
@@ -79,24 +77,16 @@ fun DigitalDisplay(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(12.dp, RoundedCornerShape(20.dp))
-            .border(1.5.dp, DarkSurfaceBorder, RoundedCornerShape(20.dp))
+            .border(1.dp, AmoledBorder, RoundedCornerShape(18.dp))
             .testTag("digital_display_panel"),
-        shape = RoundedCornerShape(20.dp),
-        color = CarbonBlack
+        shape = RoundedCornerShape(18.dp),
+        color = AmoledSurface
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color(0xFF0C1017),
-                            Color(0xFF06090D)
-                        )
-                    )
-                )
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .background(AmoledBlack)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top Status Badges Row
@@ -109,20 +99,20 @@ fun DigitalDisplay(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(6.dp))
                         .background(
                             if (state.isStable && displayWeight > 0.01f)
                                 PrecisionGreen.copy(alpha = 0.15f)
                             else if (displayWeight > 0.01f)
                                 CyanAccent.copy(alpha = 0.12f)
                             else
-                                DarkSurfaceElevated
+                                AmoledSurfaceElevated
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(7.dp)
+                            .size(6.dp)
                             .clip(CircleShape)
                             .background(
                                 when {
@@ -132,7 +122,7 @@ fun DigitalDisplay(
                                 }
                             )
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
                     Text(
                         text = when {
                             state.isStable && displayWeight > 0.01f -> "STABLE"
@@ -144,10 +134,10 @@ fun DigitalDisplay(
                             displayWeight > 0.01f -> CyanAccent
                             else -> TextMuted
                         },
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
-                        letterSpacing = 1.sp
+                        letterSpacing = 0.8.sp
                     )
                 }
 
@@ -175,18 +165,18 @@ fun DigitalDisplay(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(RoundedCornerShape(6.dp))
                         .background(
-                            if (state.diagnostics.isLevel) DarkSurfaceElevated
+                            if (state.diagnostics.isLevel) AmoledSurfaceElevated
                             else AlertRed.copy(alpha = 0.15f)
                         )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .padding(horizontal = 7.dp, vertical = 3.dp)
                 ) {
                     Icon(
                         imageVector = if (state.diagnostics.isLevel) Icons.Default.CheckCircle else Icons.Default.Warning,
                         contentDescription = if (state.diagnostics.isLevel) "Phone is Level" else "Phone is Tilted",
                         tint = if (state.diagnostics.isLevel) PrecisionGreen else AlertRed,
-                        modifier = Modifier.size(13.dp)
+                        modifier = Modifier.size(11.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -199,13 +189,13 @@ fun DigitalDisplay(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // Main Weight Digits Display
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 2.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.Bottom
             ) {
@@ -216,7 +206,7 @@ fun DigitalDisplay(
                         state.isStable && displayWeight > 0.01f -> PrecisionGreen
                         else -> TextPrimary
                     },
-                    fontSize = 58.sp,
+                    fontSize = 54.sp,
                     fontWeight = FontWeight.ExtraBold,
                     fontFamily = FontFamily.Monospace,
                     letterSpacing = 1.sp,
@@ -224,29 +214,30 @@ fun DigitalDisplay(
                     modifier = Modifier.testTag("weight_numeric_value")
                 )
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
                     text = state.selectedUnit.symbol,
                     color = CyanAccent,
-                    fontSize = 24.sp,
+                    fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,
                     modifier = Modifier
-                        .padding(bottom = 10.dp)
+                        .padding(bottom = 8.dp)
                         .testTag("weight_unit_symbol")
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Unit Selector Chips Row
+            // Compact Unit Selector Chips Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFF131922))
-                    .padding(4.dp),
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFF09090C))
+                    .border(1.dp, AmoledBorder, RoundedCornerShape(10.dp))
+                    .padding(3.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 WeightUnit.values().forEach { unit ->
@@ -256,24 +247,24 @@ fun DigitalDisplay(
                         label = "chipBg"
                     )
                     val textColor by animateColorAsState(
-                        targetValue = if (isSelected) CarbonBlack else TextSecondary,
+                        targetValue = if (isSelected) AmoledBlack else TextSecondary,
                         label = "chipTextColor"
                     )
 
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(RoundedCornerShape(7.dp))
                             .background(chipBg)
                             .clickable { onUnitSelected(unit) }
-                            .padding(vertical = 7.dp)
+                            .padding(vertical = 5.dp)
                             .testTag("unit_chip_${unit.code}"),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = unit.code,
                             color = textColor,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
                             fontFamily = FontFamily.Monospace
                         )
@@ -296,7 +287,7 @@ private fun StatusChip(
         modifier = Modifier
             .clip(RoundedCornerShape(6.dp))
             .background(color.copy(alpha = 0.15f))
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(6.dp))
+            .border(1.dp, color.copy(alpha = 0.35f), RoundedCornerShape(6.dp))
             .padding(horizontal = 7.dp, vertical = 3.dp)
             .testTag(testTag)
     ) {

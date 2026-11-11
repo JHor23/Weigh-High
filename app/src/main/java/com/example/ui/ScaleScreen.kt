@@ -12,26 +12,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,97 +32,86 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.ui.theme.CarbonBlack
+import com.example.ui.theme.AmoledBlack
+import com.example.ui.theme.AmoledBorder
+import com.example.ui.theme.AmoledSurfaceElevated
 import com.example.ui.theme.CyanAccent
-import com.example.ui.theme.DarkSurface
-import com.example.ui.theme.DarkSurfaceBorder
-import com.example.ui.theme.SlateBackground
+import com.example.ui.theme.PrecisionGreen
 import com.example.ui.theme.TextMuted
-import com.example.ui.theme.TextPrimary
 import com.example.viewmodel.ScaleViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScaleScreen(
     viewModel: ScaleViewModel,
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var showAnalyticsMenu by remember { mutableStateOf(false) }
+    var showToolsMenu by remember { mutableStateOf(false) }
+    var showTieredMenu by remember { mutableStateOf(false) }
     var showHistoryDialog by remember { mutableStateOf(false) }
+    var showConverterDialog by remember { mutableStateOf(false) }
+    var showVisualWeightDialog by remember { mutableStateOf(false) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(34.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(Color(0xFF0D2533))
-                                .border(1.dp, CyanAccent.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "WH",
-                                color = CyanAccent,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = "WEIGH HIGH",
-                                color = TextPrimary,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                fontFamily = FontFamily.Monospace,
-                                letterSpacing = 1.sp
-                            )
-                            Text(
-                                text = "PRECISION DIGITAL SCALE",
-                                color = CyanAccent,
-                                fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                letterSpacing = 0.5.sp
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    // Calibrate Action
-                    IconButton(
-                        onClick = { viewModel.openCalibrationDialog() },
-                        modifier = Modifier.testTag("action_calibrate")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Calibrate Scale",
-                            tint = CyanAccent
-                        )
-                    }
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AmoledBlack)
+    ) {
+        // 1. FULL-SCREEN IMMERSIVE SCALE SURFACE (100% of viewport area)
+        ScalePadView(
+            state = state,
+            onTouchEvent = { event -> viewModel.onTouchEvent(event) },
+            modifier = Modifier.fillMaxSize()
+        )
 
-                    // History Action
+        // 2. INTEGRATED IN-SURFACE HUD & CONTROLS OVERLAY
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Top Header: Unit Selector on Left, Two Tiered Menus on Right
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Unit display selector in the header
+                HeaderUnitSelector(
+                    selectedUnit = state.selectedUnit,
+                    onUnitSelected = { unit -> viewModel.setUnit(unit) }
+                )
+
+                // Two Tiered Menus on Top Right
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Tiered Menu 1: Weight History, Unit Conversion & Visual Representation
                     IconButton(
-                        onClick = { showHistoryDialog = true },
-                        modifier = Modifier.testTag("action_history")
+                        onClick = { showAnalyticsMenu = true },
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(AmoledSurfaceElevated)
+                            .border(1.dp, AmoledBorder, CircleShape)
+                            .testTag("action_analytics_menu")
                     ) {
                         BadgedBox(
                             badge = {
                                 if (state.history.isNotEmpty()) {
                                     Badge(
-                                        containerColor = CyanAccent,
-                                        contentColor = CarbonBlack
+                                        containerColor = PrecisionGreen,
+                                        contentColor = AmoledBlack
                                     ) {
                                         Text("${state.history.size}")
                                     }
@@ -138,81 +119,134 @@ fun ScaleScreen(
                             }
                         ) {
                             Icon(
-                                imageVector = Icons.Default.History,
-                                contentDescription = "History Log",
-                                tint = TextPrimary
+                                imageVector = Icons.Default.Scale,
+                                contentDescription = "History, Conversion & Visuals",
+                                tint = PrecisionGreen,
+                                modifier = Modifier.size(19.dp)
                             )
                         }
                     }
 
-                    // Diagnostics Action
+                    // Tiered Menu 2: Calibration & Diagnostics Tools
                     IconButton(
-                        onClick = { viewModel.toggleDiagnostics(true) },
-                        modifier = Modifier.testTag("action_diagnostics")
+                        onClick = { showToolsMenu = true },
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(AmoledSurfaceElevated)
+                            .border(1.dp, AmoledBorder, CircleShape)
+                            .testTag("action_tools_menu")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Sensors,
-                            contentDescription = "Sensor Diagnostics",
-                            tint = TextPrimary
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Calibration & Diagnostics",
+                            tint = CyanAccent,
+                            modifier = Modifier.size(19.dp)
                         )
                     }
+                }
+            }
 
-                    // Usage Guide Action
-                    IconButton(
-                        onClick = { viewModel.toggleGuide(true) },
-                        modifier = Modifier.testTag("action_guide")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.HelpOutline,
-                            contentDescription = "How It Works",
-                            tint = TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = DarkSurface,
-                    titleContentColor = TextPrimary
-                )
-            )
-        },
-        containerColor = SlateBackground,
-        modifier = modifier.fillMaxSize()
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Digital Display with weights and units
-            DigitalDisplay(
-                state = state,
-                onUnitSelected = { unit -> viewModel.setUnit(unit) }
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // In-Surface Weight Display (embedded directly within the weighing area)
+            InSurfaceDisplay(
+                state = state
             )
 
-            // Circular Interactive Weighing Pad
-            ScalePadView(
-                state = state,
-                onTouchEvent = { event -> viewModel.onTouchEvent(event) },
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
+            // Central active weighing zone takes up the entire middle expanse of the display
+            Spacer(modifier = Modifier.weight(1f))
 
-            // Primary Controls (Tare, Hold, Log, Mode)
-            ScaleControls(
+            // Subtle Hint when idle
+            if (!state.diagnostics.isTouchActive && state.currentWeightGrams <= 0.01f) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AmoledBlack.copy(alpha = 0.70f))
+                        .border(1.dp, AmoledBorder, RoundedCornerShape(16.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "PLACE ITEM OR CONTAINER ANYWHERE ON SCREEN",
+                        color = TextMuted,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 0.8.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Condensed Floating Control Dock at Bottom
+            FloatingScaleDock(
                 state = state,
                 onTare = { viewModel.tare() },
                 onToggleHold = { viewModel.toggleHold() },
-                onSave = { viewModel.toggleSaveDialog(true) },
-                onCalibrate = { viewModel.openCalibrationDialog() },
-                onModeChange = { mode -> viewModel.setSensorMode(mode) }
+                onOpenMenu = { showTieredMenu = true }
             )
         }
     }
 
-    // Modal Dialogs
+    // Top Right Tiered Menu 1: Analytics, History, Conversions & Visuals
+    if (showAnalyticsMenu) {
+        AnalyticsMenuSheet(
+            state = state,
+            onDismiss = { showAnalyticsMenu = false },
+            onOpenHistory = { showHistoryDialog = true },
+            onOpenConverter = { showConverterDialog = true },
+            onOpenVisualWeight = { showVisualWeightDialog = true }
+        )
+    }
+
+    // Top Right Tiered Menu 2: Calibration, Diagnostics & Guide
+    if (showToolsMenu) {
+        ToolsMenuSheet(
+            onDismiss = { showToolsMenu = false },
+            onCalibrate = { viewModel.openCalibrationDialog() },
+            onOpenDiagnostics = { viewModel.toggleDiagnostics(true) },
+            onOpenGuide = { viewModel.toggleGuide(true) }
+        )
+    }
+
+    // Bottom Tiered Options Menu Sheet
+    if (showTieredMenu) {
+        TieredMenuSheet(
+            state = state,
+            onDismiss = { showTieredMenu = false },
+            onModeChange = { mode -> viewModel.setSensorMode(mode) },
+            onCalibrate = { viewModel.openCalibrationDialog() },
+            onSaveReading = { viewModel.toggleSaveDialog(true) },
+            onOpenHistory = { showHistoryDialog = true },
+            onOpenDiagnostics = { viewModel.toggleDiagnostics(true) },
+            onOpenGuide = { viewModel.toggleGuide(true) }
+        )
+    }
+
+    // Modal Sub-Screens & Dialogs
+    if (showConverterDialog) {
+        UnitConverterDialog(
+            state = state,
+            onClose = { showConverterDialog = false }
+        )
+    }
+
+    if (showVisualWeightDialog) {
+        VisualWeightDialog(
+            state = state,
+            onClose = { showVisualWeightDialog = false }
+        )
+    }
+
+    if (showHistoryDialog) {
+        HistorySheet(
+            history = state.history,
+            onDeleteRecord = { id -> viewModel.deleteHistoryRecord(id) },
+            onClearAll = { viewModel.clearHistory() },
+            onClose = { showHistoryDialog = false }
+        )
+    }
+
     if (state.showCalibrationDialog) {
         CalibrationDialog(
             state = state,
@@ -234,15 +268,6 @@ fun ScaleScreen(
         DiagnosticsSheet(
             state = state,
             onClose = { viewModel.toggleDiagnostics(false) }
-        )
-    }
-
-    if (showHistoryDialog) {
-        HistorySheet(
-            history = state.history,
-            onDeleteRecord = { id -> viewModel.deleteHistoryRecord(id) },
-            onClearAll = { viewModel.clearHistory() },
-            onClose = { showHistoryDialog = false }
         )
     }
 

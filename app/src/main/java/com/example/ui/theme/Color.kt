@@ -2,26 +2,36 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val CarbonBlack = Color(0xFF090D12)
-val SlateBackground = Color(0xFF0F151D)
-val DarkSurface = Color(0xFF161E28)
-val DarkSurfaceElevated = Color(0xFF1E2836)
-val DarkSurfaceBorder = Color(0xFF2C394B)
+// Pure True Dark AMOLED Colors
+val AmoledBlack = Color(0xFF000000)
+val AmoledDark = Color(0xFF050507)
+val AmoledSurface = Color(0xFF0C0C0F)
+val AmoledSurfaceElevated = Color(0xFF141419)
+val AmoledBorder = Color(0xFF202028)
+val AmoledBorderSubtle = Color(0xFF16161D)
 
+// Backward compatible aliases
+val CarbonBlack = AmoledBlack
+val SlateBackground = AmoledBlack
+val DarkSurface = AmoledSurface
+val DarkSurfaceElevated = AmoledSurfaceElevated
+val DarkSurfaceBorder = AmoledBorder
+
+// Precision Glowing Accents
 val CyanAccent = Color(0xFF00E5FF)
-val CyanAccentDark = Color(0xFF00B4D8)
-val CyanAccentContainer = Color(0xFF072733)
+val CyanAccentDark = Color(0xFF0091EA)
+val CyanAccentContainer = Color(0xFF002738)
 
 val ElectricAmber = Color(0xFFFFB703)
 val PrecisionGreen = Color(0xFF00E676)
-val PrecisionGreenDark = Color(0xFF00B050)
-val AlertRed = Color(0xFFFF5252)
+val PrecisionGreenDark = Color(0xFF00C853)
+val AlertRed = Color(0xFFFF453A)
 
-val TextPrimary = Color(0xFFF0F4F8)
-val TextSecondary = Color(0xFF94A3B8)
-val TextMuted = Color(0xFF64748B)
+val TextPrimary = Color(0xFFFFFFFF)
+val TextSecondary = Color(0xFFA1A1AA)
+val TextMuted = Color(0xFF52525B)
 
-val MetallicRingLight = Color(0xFF475569)
-val MetallicRingDark = Color(0xFF1E293B)
-val DishCenter = Color(0xFF1A2330)
-val DishRim = Color(0xFF2D3C4F)
+val MetallicRingLight = Color(0xFF3F3F46)
+val MetallicRingDark = Color(0xFF18181B)
+val DishCenter = Color(0xFF0C0C10)
+val DishRim = Color(0xFF1F1F28)
