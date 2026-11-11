@@ -77,7 +77,13 @@ fun ScaleScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // 2. INTEGRATED IN-SURFACE HUD & CONTROLS OVERLAY
+        // 2. SIDEWAYS READING HUD (Transparent minimal digits on long left & right edges)
+        SidewaysEdgeIndicators(
+            state = state,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // 3. INTEGRATED IN-SURFACE HUD & CONTROLS OVERLAY
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -188,9 +194,10 @@ fun ScaleScreen(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // In-Surface Weight Display (embedded directly within the weighing area)
+            // In-Surface Weight Display (embedded directly within the weighing area, pulled inward to clear edge digits)
             InSurfaceDisplay(
-                state = state
+                state = state,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
 
             // Central active weighing zone takes up the entire middle expanse of the display

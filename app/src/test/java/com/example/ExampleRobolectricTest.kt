@@ -37,4 +37,15 @@ class ExampleRobolectricTest {
         val intent = DndManager.getDndSettingsIntent()
         assertNotNull(intent.action)
     }
+
+    @Test
+    fun `test portrait orientation locked in manifest`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val pm = context.packageManager
+        val activityInfo = pm.getActivityInfo(
+            android.content.ComponentName(context, MainActivity::class.java),
+            0
+        )
+        assertEquals(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, activityInfo.screenOrientation)
+    }
 }

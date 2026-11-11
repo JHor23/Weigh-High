@@ -120,28 +120,38 @@ fun ScalePadView(
                 yPos += gridStep
             }
 
-            // 2. Full Edge Precision Millimeter Ruler Ticks
+            // 2. Full Edge Precision Millimeter Ruler Ticks (omitting corner cutout zones for digits)
             val tickInterval = 16.dp.toPx()
             var tickY = 16.dp.toPx()
-            while (tickY < height - 16.dp.toPx()) {
-                val isMajor = ((tickY / tickInterval).toInt()) % 5 == 0
-                val tickLen = if (isMajor) 10.dp.toPx() else 5.dp.toPx()
-                val tickColor = if (isMajor) CyanAccent.copy(alpha = 0.4f) else COLOR_TICK_INACTIVE
+            val topExcludeStart = 50.dp.toPx()
+            val topExcludeEnd = 170.dp.toPx()
+            val bottomExcludeStart = height - 200.dp.toPx()
+            val bottomExcludeEnd = height - 70.dp.toPx()
 
-                // Left edge tick
-                drawLine(
-                    color = tickColor,
-                    start = Offset(4.dp.toPx(), tickY),
-                    end = Offset(4.dp.toPx() + tickLen, tickY),
-                    strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
-                )
-                // Right edge tick
-                drawLine(
-                    color = tickColor,
-                    start = Offset(width - 4.dp.toPx() - tickLen, tickY),
-                    end = Offset(width - 4.dp.toPx(), tickY),
-                    strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
-                )
+            while (tickY < height - 16.dp.toPx()) {
+                val inCornerDigitZone = (tickY in topExcludeStart..topExcludeEnd) ||
+                        (tickY in bottomExcludeStart..bottomExcludeEnd)
+
+                if (!inCornerDigitZone) {
+                    val isMajor = ((tickY / tickInterval).toInt()) % 5 == 0
+                    val tickLen = if (isMajor) 10.dp.toPx() else 5.dp.toPx()
+                    val tickColor = if (isMajor) CyanAccent.copy(alpha = 0.4f) else COLOR_TICK_INACTIVE
+
+                    // Left edge tick
+                    drawLine(
+                        color = tickColor,
+                        start = Offset(4.dp.toPx(), tickY),
+                        end = Offset(4.dp.toPx() + tickLen, tickY),
+                        strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
+                    )
+                    // Right edge tick
+                    drawLine(
+                        color = tickColor,
+                        start = Offset(width - 4.dp.toPx() - tickLen, tickY),
+                        end = Offset(width - 4.dp.toPx(), tickY),
+                        strokeWidth = if (isMajor) 1.5.dp.toPx() else 1.dp.toPx()
+                    )
+                }
                 tickY += tickInterval
             }
 
