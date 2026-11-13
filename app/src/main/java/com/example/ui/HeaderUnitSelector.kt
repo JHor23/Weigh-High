@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -31,15 +32,17 @@ import com.example.ui.theme.TextSecondary
 fun HeaderUnitSelector(
     selectedUnit: WeightUnit,
     onUnitSelected: (WeightUnit) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Row(
         modifier = modifier
+            .alpha(if (enabled) 1f else 0.45f)
             .clip(RoundedCornerShape(12.dp))
             .background(AmoledBlack)
             .border(1.dp, AmoledBorder, RoundedCornerShape(12.dp))
             .padding(2.dp),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(1.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         WeightUnit.values().forEach { unit ->
@@ -57,8 +60,8 @@ fun HeaderUnitSelector(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .background(chipBg)
-                    .clickable { onUnitSelected(unit) }
-                    .padding(horizontal = 7.dp, vertical = 4.dp)
+                    .clickable(enabled = enabled) { onUnitSelected(unit) }
+                    .padding(horizontal = 6.dp, vertical = 4.dp)
                     .testTag("unit_chip_${unit.code}"),
                 contentAlignment = Alignment.Center
             ) {

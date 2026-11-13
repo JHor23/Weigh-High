@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.ScaleUiState
@@ -39,7 +41,6 @@ import com.example.ui.theme.AmoledBlack
 import com.example.ui.theme.AmoledBorder
 import com.example.ui.theme.AmoledSurface
 import com.example.ui.theme.CyanAccent
-import com.example.ui.theme.PrecisionGreen
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
 
@@ -74,7 +75,7 @@ fun AnalyticsMenuSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column {
                 Text(
@@ -97,7 +98,7 @@ fun AnalyticsMenuSheet(
                 icon = Icons.Default.History,
                 title = "Weight History Log",
                 subtitle = "${state.history.size} saved measurements • View and manage logs",
-                accentColor = PrecisionGreen,
+                accentColor = CyanAccent,
                 onClick = {
                     onDismiss()
                     onOpenHistory()
@@ -108,7 +109,7 @@ fun AnalyticsMenuSheet(
             AnalyticsMenuTile(
                 icon = Icons.Default.SwapHoriz,
                 title = "Unit Converter",
-                subtitle = "Live simultaneous conversion across 7 measurement standards",
+                subtitle = "Live conversion across 7 measurement units",
                 accentColor = CyanAccent,
                 onClick = {
                     onDismiss()
@@ -120,7 +121,7 @@ fun AnalyticsMenuSheet(
             AnalyticsMenuTile(
                 icon = Icons.Default.Scale,
                 title = "Visual Weight Representation",
-                subtitle = "Animated mechanical balance scale & tangible everyday comparisons",
+                subtitle = "Animated balance scale & object comparisons",
                 accentColor = CyanAccent,
                 onClick = {
                     onDismiss()
@@ -144,11 +145,12 @@ private fun AnalyticsMenuTile(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(70.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(AmoledBlack)
             .border(1.dp, AmoledBorder, RoundedCornerShape(14.dp))
             .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 13.dp)
+            .padding(horizontal = 14.dp)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -167,17 +169,21 @@ private fun AnalyticsMenuTile(
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = subtitle,
                 color = TextMuted,
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

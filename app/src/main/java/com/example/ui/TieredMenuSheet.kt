@@ -35,6 +35,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.ScaleUiState
@@ -44,10 +45,8 @@ import com.example.ui.theme.AmoledBorder
 import com.example.ui.theme.AmoledSurface
 import com.example.ui.theme.AmoledSurfaceElevated
 import com.example.ui.theme.CyanAccent
-import com.example.ui.theme.PrecisionGreen
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -155,8 +154,8 @@ fun TieredMenuSheet(
                 }
             }
 
-            // Tier 2: Primary Actions Grid
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Tier 2: Primary Actions Grid (uniform card geometry & icon styling)
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(
                     text = "ACTIONS & TOOLS",
                     color = TextMuted,
@@ -172,7 +171,7 @@ fun TieredMenuSheet(
                     TierActionTile(
                         icon = Icons.Default.Tune,
                         title = "Calibrate",
-                        subtitle = "Standard coins/weights",
+                        subtitle = "Coins & presets",
                         accentColor = CyanAccent,
                         onClick = {
                             onDismiss()
@@ -185,8 +184,8 @@ fun TieredMenuSheet(
                     TierActionTile(
                         icon = Icons.Default.BookmarkBorder,
                         title = "Log Weight",
-                        subtitle = if (state.currentWeightGrams > 0.01f || state.isHeld) "Save current reading" else "Pad is empty",
-                        accentColor = PrecisionGreen,
+                        subtitle = if (state.currentWeightGrams > 0.01f || state.isHeld) "Save reading" else "Pad is empty",
+                        accentColor = CyanAccent,
                         onClick = {
                             if (state.currentWeightGrams > 0.01f || state.isHeld) {
                                 onDismiss()
@@ -205,8 +204,8 @@ fun TieredMenuSheet(
                     TierActionTile(
                         icon = Icons.Default.History,
                         title = "Log History",
-                        subtitle = "${state.history.size} saved readings",
-                        accentColor = TextPrimary,
+                        subtitle = "${state.history.size} saved logs",
+                        accentColor = CyanAccent,
                         onClick = {
                             onDismiss()
                             onOpenHistory()
@@ -232,8 +231,8 @@ fun TieredMenuSheet(
                 TierActionTile(
                     icon = Icons.Default.HelpOutline,
                     title = "How It Works & Tips",
-                    subtitle = "Conductivity guide & non-conductive items",
-                    accentColor = TextSecondary,
+                    subtitle = "Conductivity guide & weighing tips",
+                    accentColor = CyanAccent,
                     onClick = {
                         onDismiss()
                         onOpenGuide()
@@ -258,11 +257,12 @@ private fun TierActionTile(
 ) {
     Row(
         modifier = modifier
+            .height(68.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(AmoledBlack)
             .border(1.dp, AmoledBorder, RoundedCornerShape(14.dp))
             .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 12.dp)
+            .padding(horizontal = 12.dp)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -281,17 +281,21 @@ private fun TierActionTile(
             )
         }
         Spacer(modifier = Modifier.width(10.dp))
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = subtitle,
                 color = TextMuted,
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

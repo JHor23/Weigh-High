@@ -10,10 +10,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -25,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInteropFilter
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.example.model.ScaleUiState
@@ -78,6 +81,10 @@ fun ScalePadView(
     val rawPressure = state.diagnostics.rawTouchPressure
     val rawSize = state.diagnostics.rawTouchSize
 
+    val density = LocalDensity.current
+    val statusBarTopPx = WindowInsets.statusBars.getTop(density).toFloat()
+    val navBarBottomPx = WindowInsets.navigationBars.getBottom(density).toFloat()
+
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -123,10 +130,10 @@ fun ScalePadView(
             // 2. Full Edge Precision Millimeter Ruler Ticks (omitting corner cutout zones for digits)
             val tickInterval = 16.dp.toPx()
             var tickY = 16.dp.toPx()
-            val topExcludeStart = 50.dp.toPx()
-            val topExcludeEnd = 170.dp.toPx()
-            val bottomExcludeStart = height - 200.dp.toPx()
-            val bottomExcludeEnd = height - 70.dp.toPx()
+            val topExcludeStart = statusBarTopPx + 56.dp.toPx()
+            val topExcludeEnd = statusBarTopPx + 170.dp.toPx()
+            val bottomExcludeStart = height - navBarBottomPx - 182.dp.toPx()
+            val bottomExcludeEnd = height - navBarBottomPx - 68.dp.toPx()
 
             while (tickY < height - 16.dp.toPx()) {
                 val inCornerDigitZone = (tickY in topExcludeStart..topExcludeEnd) ||

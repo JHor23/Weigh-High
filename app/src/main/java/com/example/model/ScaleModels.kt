@@ -110,5 +110,6 @@ data class ScaleUiState(
     val selectedPreset: CalibrationPreset = CalibrationPreset.PRESETS[0],
     val customMassInput: String = "10.0",
     val isDndEnabled: Boolean = false,
-    val showDndPermissionDialog: Boolean = false
+    val showDndPermissionDialog: Boolean = false,
+    val isScreenLocked: Boolean = false
 )

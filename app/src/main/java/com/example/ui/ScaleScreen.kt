@@ -1,5 +1,8 @@
 package com.example.ui
 
+import android.app.Activity
+import android.view.WindowManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,31 +14,35 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Scale
+import androidx.compose.material.icons.filled.ScreenLockPortrait
+import androidx.compose.material.icons.filled.StayCurrentPortrait
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +64,7 @@ fun ScaleScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val view = LocalView.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showAnalyticsMenu by remember { mutableStateOf(false) }
     var showToolsMenu by remember { mutableStateOf(false) }
@@ -64,6 +72,27 @@ fun ScaleScreen(
     var showHistoryDialog by remember { mutableStateOf(false) }
     var showConverterDialog by remember { mutableStateOf(false) }
     var showVisualWeightDialog by remember { mutableStateOf(false) }
+
+    // Prevent display from dimming or sleeping while Screen Lock is active
+    DisposableEffect(state.isScreenLocked, view) {
+        val window = (context as? Activity)?.window
+        if (state.isScreenLocked) {
+            view.keepScreenOn = true
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            view.keepScreenOn = false
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            view.keepScreenOn = false
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    // Prevent accidental system back exit while screen is locked
+    BackHandler(enabled = state.isScreenLocked) {
+        // Intentionally absorbed while Screen Lock is active
+    }
 
     Box(
         modifier = modifier
@@ -92,7 +121,8 @@ fun ScaleScreen(
                 .padding(horizontal = 14.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Header: Unit Selector on Left, DND Toggle + Two Tiered Menus on Right
+            // Top Header: Unit Selector on Left, Screen Lock + DND + Two Tiered Menus on Right
+            val isUnlocked = !state.isScreenLocked
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,23 +133,48 @@ fun ScaleScreen(
                 // Unit display selector in the header
                 HeaderUnitSelector(
                     selectedUnit = state.selectedUnit,
-                    onUnitSelected = { unit -> viewModel.setUnit(unit) }
+                    onUnitSelected = { unit -> viewModel.setUnit(unit) },
+                    enabled = isUnlocked
                 )
 
-                // Actions on Top Right: Clean non-overlapping Action Cluster
+                // Actions on Top Right: Clean 4-button non-overlapping Action Cluster
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
                         .background(AmoledSurfaceElevated)
                         .border(1.dp, AmoledBorder, RoundedCornerShape(14.dp))
                         .padding(horizontal = 4.dp, vertical = 3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 1. Do Not Disturb Mode Toggle Button
+                    // 1. Screen Lock & Keep Awake Toggle Button (always interactive to unlock)
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(31.dp)
+                            .clip(CircleShape)
+                            .background(if (state.isScreenLocked) CyanAccent.copy(alpha = 0.22f) else AmoledBlack)
+                            .border(
+                                1.dp,
+                                if (state.isScreenLocked) CyanAccent else AmoledBorder,
+                                CircleShape
+                            )
+                            .clickable { viewModel.toggleScreenLock() }
+                            .testTag("action_screen_lock_toggle"),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (state.isScreenLocked) Icons.Default.ScreenLockPortrait else Icons.Default.StayCurrentPortrait,
+                            contentDescription = if (state.isScreenLocked) "Unlock Screen Controls" else "Lock Screen & Keep Display Awake",
+                            tint = if (state.isScreenLocked) CyanAccent else TextMuted,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    // 2. Do Not Disturb Mode Toggle Button
+                    Box(
+                        modifier = Modifier
+                            .size(31.dp)
+                            .alpha(if (isUnlocked) 1f else 0.38f)
                             .clip(CircleShape)
                             .background(if (state.isDndEnabled) ElectricAmber.copy(alpha = 0.22f) else AmoledBlack)
                             .border(
@@ -127,7 +182,7 @@ fun ScaleScreen(
                                 if (state.isDndEnabled) ElectricAmber else AmoledBorder,
                                 CircleShape
                             )
-                            .clickable { viewModel.toggleDnd(context) }
+                            .clickable(enabled = isUnlocked) { viewModel.toggleDnd(context) }
                             .testTag("action_dnd_toggle"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -139,14 +194,15 @@ fun ScaleScreen(
                         )
                     }
 
-                    // 2. Tiered Menu 1: Weight History, Unit Conversion & Visual Representation
+                    // 3. Tiered Menu 1: Weight History, Unit Conversion & Visual Representation
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(31.dp)
+                            .alpha(if (isUnlocked) 1f else 0.38f)
                             .clip(CircleShape)
                             .background(AmoledBlack)
                             .border(1.dp, AmoledBorder, CircleShape)
-                            .clickable { showAnalyticsMenu = true }
+                            .clickable(enabled = isUnlocked) { showAnalyticsMenu = true }
                             .testTag("action_analytics_menu"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -171,14 +227,15 @@ fun ScaleScreen(
                         }
                     }
 
-                    // 3. Tiered Menu 2: Calibration & Diagnostics Tools
+                    // 4. Tiered Menu 2: Calibration & Diagnostics Tools
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(31.dp)
+                            .alpha(if (isUnlocked) 1f else 0.38f)
                             .clip(CircleShape)
                             .background(AmoledBlack)
                             .border(1.dp, AmoledBorder, CircleShape)
-                            .clickable { showToolsMenu = true }
+                            .clickable(enabled = isUnlocked) { showToolsMenu = true }
                             .testTag("action_tools_menu"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -203,8 +260,27 @@ fun ScaleScreen(
             // Central active weighing zone takes up the entire middle expanse of the display
             Spacer(modifier = Modifier.weight(1f))
 
-            // Subtle Hint when idle
-            if (!state.diagnostics.isTouchActive && state.currentWeightGrams <= 0.01f) {
+            // Subtle Hint when screen locked or idle
+            if (state.isScreenLocked) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(AmoledBlack.copy(alpha = 0.80f))
+                        .border(1.dp, CyanAccent.copy(alpha = 0.55f), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "SCREEN LOCKED • DISPLAY AWAKE • TAP LOCK TO UNLOCK",
+                        color = CyanAccent,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        letterSpacing = 0.7.sp,
+                        maxLines = 1
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            } else if (!state.diagnostics.isTouchActive && state.currentWeightGrams <= 0.01f) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))

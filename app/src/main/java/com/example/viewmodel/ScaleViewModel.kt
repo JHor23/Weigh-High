@@ -106,6 +106,7 @@ class ScaleViewModel(application: Application) : AndroidViewModel(application) {
      * Sets current measurement as the zero baseline
      */
     fun tare() {
+        if (_uiState.value.isScreenLocked) return
         sensorManager.tare()
         _uiState.update {
             it.copy(
@@ -133,6 +134,7 @@ class ScaleViewModel(application: Application) : AndroidViewModel(application) {
      * Freezes/unfreezes the display reading
      */
     fun toggleHold() {
+        if (_uiState.value.isScreenLocked) return
         sensorManager.vibrateLight()
         _uiState.update { current ->
             if (current.isHeld) {
@@ -147,12 +149,14 @@ class ScaleViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setUnit(unit: WeightUnit) {
+        if (_uiState.value.isScreenLocked) return
         sensorManager.vibrateSubtleTick()
         repository.saveSelectedUnit(unit)
         _uiState.update { it.copy(selectedUnit = unit) }
     }
 
     fun setSensorMode(mode: SensorMode) {
+        if (_uiState.value.isScreenLocked) return
         sensorManager.vibrateLight()
         repository.saveSelectedMode(mode)
         _uiState.update {
@@ -297,6 +301,7 @@ class ScaleViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun toggleDnd(context: android.content.Context) {
+        if (_uiState.value.isScreenLocked) return
         val willEnable = !_uiState.value.isDndEnabled
         if (willEnable && !com.example.util.DndManager.hasDndPermission(context)) {
             _uiState.update { it.copy(showDndPermissionDialog = true) }
@@ -309,5 +314,10 @@ class ScaleViewModel(application: Application) : AndroidViewModel(application) {
 
     fun dismissDndPermissionDialog() {
         _uiState.update { it.copy(showDndPermissionDialog = false) }
+    }
+
+    fun toggleScreenLock() {
+        sensorManager.vibrateLight()
+        _uiState.update { it.copy(isScreenLocked = !it.isScreenLocked) }
     }
 }

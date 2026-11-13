@@ -1,10 +1,13 @@
 package com.example
 
+import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.model.WeightUnit
 import com.example.util.DndManager
+import com.example.viewmodel.ScaleViewModel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -47,5 +50,31 @@ class ExampleRobolectricTest {
             0
         )
         assertEquals(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, activityInfo.screenOrientation)
+    }
+
+    @Test
+    fun `test screen lock toggles and blocks unit and hold changes`() {
+        val app = ApplicationProvider.getApplicationContext<Application>()
+        val vm = ScaleViewModel(app)
+
+        assertFalse(vm.uiState.value.isScreenLocked)
+        assertEquals(WeightUnit.GRAMS, vm.uiState.value.selectedUnit)
+
+        // Enable screen lock
+        vm.toggleScreenLock()
+        assertTrue(vm.uiState.value.isScreenLocked)
+
+        // Controls are locked while isScreenLocked is true
+        vm.setUnit(WeightUnit.OUNCES)
+        vm.toggleHold()
+        assertEquals(WeightUnit.GRAMS, vm.uiState.value.selectedUnit)
+        assertFalse(vm.uiState.value.isHeld)
+
+        // Unlock screen controls
+        vm.toggleScreenLock()
+        assertFalse(vm.uiState.value.isScreenLocked)
+
+        vm.setUnit(WeightUnit.OUNCES)
+        assertEquals(WeightUnit.OUNCES, vm.uiState.value.selectedUnit)
     }
 }

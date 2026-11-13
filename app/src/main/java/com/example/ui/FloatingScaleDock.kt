@@ -27,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -51,9 +52,11 @@ fun FloatingScaleDock(
     onOpenMenu: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isUnlocked = !state.isScreenLocked
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .alpha(if (isUnlocked) 1f else 0.45f)
             .clip(RoundedCornerShape(20.dp))
             .background(Color(0xFF07070A).copy(alpha = 0.92f))
             .border(1.dp, AmoledBorder, RoundedCornerShape(20.dp))
@@ -64,10 +67,13 @@ fun FloatingScaleDock(
         // HOLD Button (Left)
         FilledTonalButton(
             onClick = onToggleHold,
+            enabled = isUnlocked,
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = if (state.isHeld) ElectricAmber.copy(alpha = 0.2f) else AmoledSurfaceElevated,
-                contentColor = if (state.isHeld) ElectricAmber else TextPrimary
+                contentColor = if (state.isHeld) ElectricAmber else TextPrimary,
+                disabledContainerColor = if (state.isHeld) ElectricAmber.copy(alpha = 0.2f) else AmoledSurfaceElevated,
+                disabledContentColor = if (state.isHeld) ElectricAmber else TextPrimary
             ),
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier
@@ -100,10 +106,13 @@ fun FloatingScaleDock(
         // TARE Primary Glowing Button (Center)
         Button(
             onClick = onTare,
+            enabled = isUnlocked,
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = CyanAccent,
-                contentColor = AmoledBlack
+                contentColor = AmoledBlack,
+                disabledContainerColor = CyanAccent,
+                disabledContentColor = AmoledBlack
             ),
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier
@@ -132,10 +141,13 @@ fun FloatingScaleDock(
         // Tiered MENU Button (Right)
         FilledTonalButton(
             onClick = onOpenMenu,
+            enabled = isUnlocked,
             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
                 containerColor = AmoledSurfaceElevated,
-                contentColor = CyanAccent
+                contentColor = CyanAccent,
+                disabledContainerColor = AmoledSurfaceElevated,
+                disabledContentColor = CyanAccent
             ),
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier

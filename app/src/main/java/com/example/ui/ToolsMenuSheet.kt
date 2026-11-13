@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.AmoledBlack
@@ -40,7 +42,6 @@ import com.example.ui.theme.AmoledSurface
 import com.example.ui.theme.CyanAccent
 import com.example.ui.theme.TextMuted
 import com.example.ui.theme.TextPrimary
-import com.example.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +73,7 @@ fun ToolsMenuSheet(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column {
                 Text(
@@ -118,8 +119,8 @@ fun ToolsMenuSheet(
             ToolMenuTile(
                 icon = Icons.Default.HelpOutline,
                 title = "How It Works & Tips",
-                subtitle = "Conductivity guide & non-conductive item instructions",
-                accentColor = TextSecondary,
+                subtitle = "Conductivity guide & weighing instructions",
+                accentColor = CyanAccent,
                 onClick = {
                     onDismiss()
                     onOpenGuide()
@@ -142,11 +143,12 @@ private fun ToolMenuTile(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(70.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(AmoledBlack)
             .border(1.dp, AmoledBorder, RoundedCornerShape(14.dp))
             .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 13.dp)
+            .padding(horizontal = 14.dp)
             .testTag(testTag),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -165,17 +167,21 @@ private fun ToolMenuTile(
             )
         }
         Spacer(modifier = Modifier.width(12.dp))
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 text = title,
                 color = TextPrimary,
                 fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
+                fontSize = 14.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = subtitle,
                 color = TextMuted,
-                fontSize = 11.sp
+                fontSize = 11.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

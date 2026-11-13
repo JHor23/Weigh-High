@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.ScreenLockPortrait
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -128,21 +129,10 @@ fun InSurfaceDisplay(
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,
-                    letterSpacing = 0.8.sp
+                    letterSpacing = 0.8.sp,
+                    maxLines = 1,
+                    softWrap = false
                 )
-            }
-
-            // Center Badges (TARED, HELD, DND)
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (state.tareOffsetGrams > 0.001f) {
-                    HudBadge(text = "TARED", color = ElectricAmber, testTag = "badge_tared")
-                }
-                if (state.isHeld) {
-                    HudBadge(text = "HOLD", color = CyanAccent, icon = Icons.Default.Lock, testTag = "badge_held")
-                }
-                if (state.isDndEnabled) {
-                    HudBadge(text = "DND", color = ElectricAmber, icon = Icons.Default.NotificationsOff, testTag = "badge_dnd")
-                }
             }
 
             // Level Check Status
@@ -165,8 +155,32 @@ fun InSurfaceDisplay(
                     color = if (state.diagnostics.isLevel) TextSecondary else AlertRed,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.Monospace
+                    fontFamily = FontFamily.Monospace,
+                    maxLines = 1,
+                    softWrap = false
                 )
+            }
+        }
+
+        // Active Mode Badges Row (TARED, HOLD, DND, LOCKED)
+        if (state.tareOffsetGrams > 0.001f || state.isHeld || state.isDndEnabled || state.isScreenLocked) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (state.tareOffsetGrams > 0.001f) {
+                    HudBadge(text = "TARED", color = ElectricAmber, testTag = "badge_tared")
+                }
+                if (state.isHeld) {
+                    HudBadge(text = "HOLD", color = CyanAccent, icon = Icons.Default.Lock, testTag = "badge_held")
+                }
+                if (state.isDndEnabled) {
+                    HudBadge(text = "DND", color = ElectricAmber, icon = Icons.Default.NotificationsOff, testTag = "badge_dnd")
+                }
+                if (state.isScreenLocked) {
+                    HudBadge(text = "LOCKED", color = CyanAccent, icon = Icons.Default.ScreenLockPortrait, testTag = "badge_screen_locked")
+                }
             }
         }
 
