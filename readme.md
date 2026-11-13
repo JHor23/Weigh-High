@@ -29,6 +29,7 @@ Whether you're performing micro-measurements, switching sensing modes, or loggin
 
 * Modern Web Technologies & Native Wrappers
 * Advanced Sensor & Hardware Telemetry APIs
+* This was created with A.I.
 
 ---
 
