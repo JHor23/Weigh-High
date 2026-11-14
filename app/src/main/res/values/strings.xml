@@ -26,4 +26,9 @@
     <string name="touch_pad_hint">Place item or conductive dish in center</string>
     <string name="calibration_title">Scale Calibration</string>
     <string name="calibration_desc">Calibrate with a known coin or standard weight for high accuracy.</string>
+
+    <string name="about_me_developer_name">JHor</string>
+    <string name="about_me_url_kofi" translatable="false">https://ko-fi.com/jhor23</string>
+    <string name="about_me_url_github" translatable="false">https://github.com/JHor23/Weigh-High</string>
+    <string name="about_me_url_projects" translatable="false">https://github.com/JHor23</string>
 </resources>

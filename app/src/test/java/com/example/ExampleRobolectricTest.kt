@@ -77,4 +77,12 @@ class ExampleRobolectricTest {
         vm.setUnit(WeightUnit.OUNCES)
         assertEquals(WeightUnit.OUNCES, vm.uiState.value.selectedUnit)
     }
+
+    @Test
+    fun `test about me urls match expected destinations`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        assertEquals("https://ko-fi.com/jhor23", context.getString(R.string.about_me_url_kofi))
+        assertEquals("https://github.com/JHor23/Weigh-High", context.getString(R.string.about_me_url_github))
+        assertEquals("https://github.com/JHor23", context.getString(R.string.about_me_url_projects))
+    }
 }

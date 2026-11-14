@@ -21,14 +21,11 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.ScreenLockPortrait
 import androidx.compose.material.icons.filled.StayCurrentPortrait
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,7 +51,6 @@ import com.example.ui.theme.AmoledBorder
 import com.example.ui.theme.AmoledSurfaceElevated
 import com.example.ui.theme.CyanAccent
 import com.example.ui.theme.ElectricAmber
-import com.example.ui.theme.PrecisionGreen
 import com.example.ui.theme.TextMuted
 import com.example.viewmodel.ScaleViewModel
 
@@ -66,8 +62,7 @@ fun ScaleScreen(
     val context = LocalContext.current
     val view = LocalView.current
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var showAnalyticsMenu by remember { mutableStateOf(false) }
-    var showToolsMenu by remember { mutableStateOf(false) }
+    var showAboutMeDialog by remember { mutableStateOf(false) }
     var showTieredMenu by remember { mutableStateOf(false) }
     var showHistoryDialog by remember { mutableStateOf(false) }
     var showConverterDialog by remember { mutableStateOf(false) }
@@ -121,7 +116,7 @@ fun ScaleScreen(
                 .padding(horizontal = 14.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Header: Unit Selector on Left, Screen Lock + DND + Two Tiered Menus on Right
+            // Top Header: Unit Selector on Left, Screen Lock + DND + Info on Right
             val isUnlocked = !state.isScreenLocked
             Row(
                 modifier = Modifier
@@ -137,7 +132,7 @@ fun ScaleScreen(
                     enabled = isUnlocked
                 )
 
-                // Actions on Top Right: Clean 4-button non-overlapping Action Cluster
+                // Actions on Top Right: Clean 3-button non-overlapping Action Cluster
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(14.dp))
@@ -194,7 +189,7 @@ fun ScaleScreen(
                         )
                     }
 
-                    // 3. Tiered Menu 1: Weight History, Unit Conversion & Visual Representation
+                    // 3. Information ("i") Button -> About Me Page
                     Box(
                         modifier = Modifier
                             .size(31.dp)
@@ -202,46 +197,13 @@ fun ScaleScreen(
                             .clip(CircleShape)
                             .background(AmoledBlack)
                             .border(1.dp, AmoledBorder, CircleShape)
-                            .clickable(enabled = isUnlocked) { showAnalyticsMenu = true }
-                            .testTag("action_analytics_menu"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        BadgedBox(
-                            badge = {
-                                if (state.history.isNotEmpty()) {
-                                    Badge(
-                                        containerColor = PrecisionGreen,
-                                        contentColor = AmoledBlack
-                                    ) {
-                                        Text("${state.history.size}")
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Scale,
-                                contentDescription = "History, Conversion & Visuals",
-                                tint = PrecisionGreen,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-
-                    // 4. Tiered Menu 2: Calibration & Diagnostics Tools
-                    Box(
-                        modifier = Modifier
-                            .size(31.dp)
-                            .alpha(if (isUnlocked) 1f else 0.38f)
-                            .clip(CircleShape)
-                            .background(AmoledBlack)
-                            .border(1.dp, AmoledBorder, CircleShape)
-                            .clickable(enabled = isUnlocked) { showToolsMenu = true }
-                            .testTag("action_tools_menu"),
+                            .clickable(enabled = isUnlocked) { showAboutMeDialog = true }
+                            .testTag("action_about_me"),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Calibration & Diagnostics",
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "About Developer",
                             tint = CyanAccent,
                             modifier = Modifier.size(16.dp)
                         )
@@ -310,24 +272,10 @@ fun ScaleScreen(
         }
     }
 
-    // Top Right Tiered Menu 1: Analytics, History, Conversions & Visuals
-    if (showAnalyticsMenu) {
-        AnalyticsMenuSheet(
-            state = state,
-            onDismiss = { showAnalyticsMenu = false },
-            onOpenHistory = { showHistoryDialog = true },
-            onOpenConverter = { showConverterDialog = true },
-            onOpenVisualWeight = { showVisualWeightDialog = true }
-        )
-    }
-
-    // Top Right Tiered Menu 2: Calibration, Diagnostics & Guide
-    if (showToolsMenu) {
-        ToolsMenuSheet(
-            onDismiss = { showToolsMenu = false },
-            onCalibrate = { viewModel.openCalibrationDialog() },
-            onOpenDiagnostics = { viewModel.toggleDiagnostics(true) },
-            onOpenGuide = { viewModel.toggleGuide(true) }
+    // About Me Dialog (attached to top-right "i" button)
+    if (showAboutMeDialog) {
+        AboutMeDialog(
+            onClose = { showAboutMeDialog = false }
         )
     }
 
@@ -341,6 +289,8 @@ fun ScaleScreen(
             onSaveReading = { viewModel.toggleSaveDialog(true) },
             onOpenHistory = { showHistoryDialog = true },
             onOpenDiagnostics = { viewModel.toggleDiagnostics(true) },
+            onOpenConverter = { showConverterDialog = true },
+            onOpenVisualWeight = { showVisualWeightDialog = true },
             onOpenGuide = { viewModel.toggleGuide(true) }
         )
     }

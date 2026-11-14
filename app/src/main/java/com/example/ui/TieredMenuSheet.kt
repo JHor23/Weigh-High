@@ -13,13 +13,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Scale
 import androidx.compose.material.icons.filled.Sensors
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,6 +62,8 @@ fun TieredMenuSheet(
     onSaveReading: () -> Unit,
     onOpenHistory: () -> Unit,
     onOpenDiagnostics: () -> Unit,
+    onOpenConverter: () -> Unit,
+    onOpenVisualWeight: () -> Unit,
     onOpenGuide: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -80,6 +86,7 @@ fun TieredMenuSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
                 .padding(bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -225,6 +232,37 @@ fun TieredMenuSheet(
                         },
                         modifier = Modifier.weight(1f),
                         testTag = "tile_sensors"
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    TierActionTile(
+                        icon = Icons.Default.SwapHoriz,
+                        title = "Unit Converter",
+                        subtitle = "7 mass units",
+                        accentColor = CyanAccent,
+                        onClick = {
+                            onDismiss()
+                            onOpenConverter()
+                        },
+                        modifier = Modifier.weight(1f),
+                        testTag = "tile_converter"
+                    )
+
+                    TierActionTile(
+                        icon = Icons.Default.Scale,
+                        title = "Visual Weight",
+                        subtitle = "Balance & objects",
+                        accentColor = CyanAccent,
+                        onClick = {
+                            onDismiss()
+                            onOpenVisualWeight()
+                        },
+                        modifier = Modifier.weight(1f),
+                        testTag = "tile_visual_weight"
                     )
                 }
 
